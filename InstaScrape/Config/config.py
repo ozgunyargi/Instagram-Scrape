@@ -1,12 +1,9 @@
-PATH_ = r"D:\Users\suuser\Desktop\Scrape\Code"
-DRIVER_PATH_ = r"D:\Users\suuser\Desktop\Scrape\Code\InstaScrape\chromedriver"
-DATA_PATH_ = r"D:\Users\suuser\Desktop\Scrape\Data"
-SITE_ = r"http://www.instagram.com"
+PATH_ = "MAIN FOLDER PATH HERE"
+DRIVER_PATH_ = "BROWSER DRIVER PATH HERE"
+DATA_PATH_ = "DATA FOLDER PATH HERE"
+SITE_ = "SITE URL HERE"
 
-#USERNAME_ ="bottesterlab"
-#PASSWORD_ ="34956BSabanci"
+USERNAME_ ="USERNAME HERE"
+PASSWORD_ ="PASSWORD HERE"
 
-USERNAME_ ="adriaen.sorensen"
-PASSWORD_ ="Y-ii-t-e-n-g-1"
-
-PAGE_ = "instagram"
+PAGE_ = "PAGE HERE"
