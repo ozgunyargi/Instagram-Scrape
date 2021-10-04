@@ -4,6 +4,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 import time
 import os
@@ -20,7 +21,9 @@ def open_site(path, site): # Opens site
 #    options.headless = True
 #    op = webdriver.ChromeOptions()
 #    op.add_argument('headless')
-    driver = webdriver.Chrome(path)
+
+#    driver = webdriver.Chrome(path)
+    driver = webdriver.Chrome(ChromeDriverManager().install())
     driver.get(site)
 
     return driver
