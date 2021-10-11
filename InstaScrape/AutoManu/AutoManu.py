@@ -5,6 +5,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver import Firefox
 
 import time
 import os
@@ -15,16 +16,16 @@ sys.path.append(os.getcwd())
 
 from InstaScrape.Config.config import *
 
-def open_site(path, site): # Opens site
+def open_site(path, site, browser_="FireFox"): # Opens site
 
-#    options = Options()
-#    options.headless = True
-#    op = webdriver.ChromeOptions()
-#    op.add_argument('headless')
+    if browser_ == "FireFox":
 
-#    driver = webdriver.Chrome(path)
-    driver = webdriver.Chrome(ChromeDriverManager().install())
-    driver.get(site)
+        driver = Firefox(executable_path= DRIVER_PATH_)
+        driver.get(site)
+
+    elif browser_ == "Chrome":
+
+        driver = webdriver.Chrome(ChromeDriverManager().install())
 
     return driver
 
