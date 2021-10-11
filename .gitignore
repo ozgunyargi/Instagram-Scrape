@@ -2,3 +2,4 @@ Accounts.txt
 InstaScrape/__pycache__
 InstaScrape/AutoManu/__pycache__
 InstaScrape/Config/__pycache__
+geckodriver.log
