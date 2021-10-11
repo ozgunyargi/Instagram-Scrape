@@ -16,17 +16,17 @@ sys.path.append(os.getcwd())
 
 from InstaScrape.Config.config import *
 
-def open_site(path, site, browser_="FireFox"): # Opens site
+def open_site(path, site, browser_="Firefox"): # Opens site
 
-    if browser_ == "FireFox":
+    if browser_ == "Firefox":
 
-        driver = Firefox(executable_path= DRIVER_PATH_)
-        driver.get(site)
+        driver = Firefox(executable_path= DRIVER_PATH_FIREFOX)
 
     elif browser_ == "Chrome":
 
         driver = webdriver.Chrome(ChromeDriverManager().install())
 
+    driver.get(site)
     return driver
 
 def login (name, passwrd, driver): # Login to your account
@@ -107,9 +107,9 @@ def create_folder(foldername): # Create a folder named "foldername" if there are
     if not os.path.exists(path+r"/" + foldername):
         os.mkdir(path+r"/"+foldername)
 
-def rq_login(DRIVER_PATH, SITE_NAME, USERNAME, PASSWORD): # A function specified for Reqest_Scrape.py file
+def rq_login(DRIVER_PATH, SITE_NAME, USERNAME, PASSWORD, BROWSER): # A function specified for Reqest_Scrape.py file
 
-    driver = open_site(DRIVER_PATH, SITE_NAME)
+    driver = open_site(DRIVER_PATH, SITE_NAME, browser_ = BROWSER)
     login(USERNAME,PASSWORD, driver)
     not_now(driver)
 

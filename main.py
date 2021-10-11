@@ -4,12 +4,16 @@ import InstaScrape.Scrape as Scrp
 import InstaScrape.AutoManu.AutoManu as AM
 from InstaScrape.Config.config import *
 
-def open_enviroment():
+def open_enviroment(browser_name):
 
     print("Opening browser")
-    DRIVER_PATH = r"{}\chromedriver.exe".format(DRIVER_PATH_)
+    if browser_name == "Chrome":
+        DRIVER_PATH = r"{}\chromedriver.exe".format(DRIVER_PATH_CHROME)
 
-    driver_ = AM.rq_login(DRIVER_PATH, SITE_, USERNAME_, PASSWORD_)
+    elif browser_name == "Firefox":
+        DRIVER_PATH = r"{}".format(DRIVER_PATH_FIREFOX)
+
+    driver_ = AM.rq_login(DRIVER_PATH, SITE_, USERNAME_, PASSWORD_, browser_name)
     session_ = Scrp.connect_request(driver_)
 
     return driver_, session_
@@ -32,6 +36,8 @@ def main():
             type="str", dest="account_name", default="")
     parser.add_option("-l", "--list", help='The path of the text file that contains names of accounts.',
             type="str", dest="text_path", default="")
+    parser.add_option("-b", "--browser", help='Browser that you want to select.',
+            type="str", dest="browser_name", default="Firefox")
 
     parameters, args = parser.parse_args(sys.argv[1:])
 
@@ -41,7 +47,7 @@ def main():
             * Required parameters are "-m = Single, -a = ACCOUNT_NAME_1,[ACCOUNT_NAME_2]"
         """
 
-        driver, session = open_enviroment()
+        driver, session = open_enviroment(parameters.browser_name)
         start_ = time.perf_counter()
         acc_list = (parameters.account_name+",").split(",")
         acc_list.pop()
