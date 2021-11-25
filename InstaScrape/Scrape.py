@@ -112,13 +112,17 @@ def get_post_data(posts, page, s): #Get post data and save it as JSON
 
 def get_upper_data(url): # Pulls metadata related with the page
 
-    names = ["post_id", "shortcode", "is_video", "image_url"]
+    names = ["post_id", "shortcode", "is_video", "image_url", "text"]
     elements = []
 
     elements.append(int(url["graphql"]["shortcode_media"]["id"]))
     elements.append(url["graphql"]["shortcode_media"]["shortcode"])
     elements.append(url["graphql"]["shortcode_media"]["is_video"])
     elements.append(url["graphql"]["shortcode_media"]["display_url"])
+    try:
+        elements.append(url["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"][0]["node"]["text"])
+    except:
+        elements.append("")
 
     upperdata = {}
 
