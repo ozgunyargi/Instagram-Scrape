@@ -1,11 +1,10 @@
-import sys, time, os
+import sys, time, os, glob
 from optparse import OptionParser
 import InstaScrape.Scrape as Scrp
 import InstaScrape.AutoManu.AutoManu as AM
 from InstaScrape.Config.config import *
 
 def open_enviroment(browser_name):
-
     print("Opening browser")
     if browser_name == "Chrome":
         DRIVER_PATH = r"{}\chromedriver.exe".format(DRIVER_PATH_CHROME)
@@ -19,13 +18,24 @@ def open_enviroment(browser_name):
     return driver_, session_
 
 def scrape_an_account(driver_, acc_name, session_):
+    curpath_ = os.getcwd()
     Scrp.go_page(driver_, acc_name)
     posts = AM.scroll_and_save(driver_, 1)
 
     os.chdir(DATA_PATH_)
-    Scrp.get_page_data(SITE_, acc_name, session_)
-    Scrp.get_post_data(posts, acc_name, session_)
     Scrp.get_raw_data(posts, acc_name, SITE_, session_)
+    os.chdir(curpath_)
+
+def extract_features(acc_name):
+    posts = []
+
+    for file_path in glob.glob("{}/{}/raw/*.json".format(DATA_PATH_, acc_name)):
+        if os.path.basename(file_path) == acc_name+".json":
+            Scrp.get_page_data(file_path)
+        else:
+            posts.append(file_path)
+
+    Scrp.get_post_data(posts, acc_name)
 
 def main():
 
@@ -41,16 +51,21 @@ def main():
 
     parameters, args = parser.parse_args(sys.argv[1:])
 
-    if parameters.mode == "Single":
+    if parameters.mode == "Scrape":
         """
         Scrapes given account(s) name only.
-            * Required parameters are "-m = Single, -a = ACCOUNT_NAME_1,[ACCOUNT_NAME_2]"
+            * Required parameters are "-m = Scrape, -a = ACCOUNT_NAME_1,[ACCOUNT_NAME_2] | -l = TEXT_PATH"
         """
+
+        if parameters.text_path == "":
+            acc_list = (parameters.account_name).split(",")
+
+        else:
+            with open(parameters.text_path) as myfile:
+                acc_list = myfile.readlines()
 
         driver, session = open_enviroment(parameters.browser_name)
         start_ = time.perf_counter()
-        acc_list = (parameters.account_name+",").split(",")
-        acc_list.pop()
 
         for account_name in acc_list:
             scrape_an_account(driver, account_name.strip(), session)
@@ -58,19 +73,21 @@ def main():
         print("Scraping was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
         os.chdir(PATH_)
 
-    elif parameters.mode == "Multiple":
+    elif parameters.mode == "Feature_Filter":
         """
-        Scrapes account(s) from given text file.
-            * Each line must contain only one account name.
+        Creates json files for each post and account page that contains chosen informations only.
+            * Required parameters are "-m = Feature_Filter, -a = ACCOUNT_NAME_1,[ACCOUNT_NAME_2] | -l = TEXT_PATH
         """
-        driver, session = open_enviroment()
-        start_ = time.perf_counter()
-        with open(parameters.text_path) as myfile:
-            for account in myfile.readlines():
-                scrape_an_account(driver, account.strip(), session)
-        stop_= time.perf_counter()
-        print("Scraping was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
-        os.chdir(PATH_)
+
+        if parameters.text_path == "":
+            acc_list = (parameters.account_name).split(",")
+
+        else:
+            with open(parameters.text_path) as myfile:
+                acc_list = myfile.readlines()
+
+        for account_name in acc_list:
+            extract_features(account_name.strip())
 
 if __name__ == '__main__':
 

@@ -28,68 +28,45 @@ def go_page(driver, page): #Initialize the driver and open the related site
 
     driver.get(r"http://www.instagram.com/{}".format(page))
 
-def get_page_data(site, page, s): #Get the metadata related with the opened page and save it as JSON
+def get_page_data(page): #Get the metadata related with the opened page and save it as JSON
 
-    print("* Start Collection Metadata of {}".format(page), end="", flush=True)
-
-    Is.create_folder(page)
-
-    curpath = os.getcwd()
-
-    os.chdir(curpath+ r"\{}".format(page))
-
-    Is.create_folder("images")
-    Is.create_folder("videos")
+    acc_name = os.path.basename(page)[:-5]
+    print("* Start Collection Metadata of {}".format(acc_name), end="", flush=True)
 
     metadict= {}
 
-    URL = site + r"/" + page + r"/?__a=1"
+    with open(page) as myfile:
+        json = js.load(myfile)
 
-    r = s.get(URL)
-    json = r.json()
+        names = ["id", "posts", "followers", "following", "full_name", "verified"]
+        elements = []
+        elements.append( int(json["logging_page_id"][json["logging_page_id"].index("_")+1:]) )
+        elements.append(json["graphql"]["user"]["edge_owner_to_timeline_media"]["count"])
+        elements.append(json["graphql"]["user"]["edge_followed_by"]["count"])
+        elements.append(json["graphql"]["user"]["edge_follow"]["count"])
+        elements.append(json["graphql"]["user"]["full_name"])
+        elements.append(json["graphql"]["user"]["is_verified"])
 
-    names = ["id", "posts", "followers", "following", "full_name", "verified"]
+        for id, name in enumerate(names):
+            metadict[name] = elements[id]
 
-    elements = []
+        with open("{}/{}/{}.json".format(DATA_PATH_, acc_name, acc_name), 'w') as fp:
+            js.dump(metadict, fp, indent=4)
+            print(" => finished.".format(page))
 
-    elements.append( int(json["logging_page_id"][json["logging_page_id"].index("_")+1:]) )
-    elements.append(json["graphql"]["user"]["edge_owner_to_timeline_media"]["count"])
-    elements.append(json["graphql"]["user"]["edge_followed_by"]["count"])
-    elements.append(json["graphql"]["user"]["edge_follow"]["count"])
-    elements.append(json["graphql"]["user"]["full_name"])
-    elements.append(json["graphql"]["user"]["is_verified"])
-
-    for id, name in enumerate(names):
-        metadict[name] = elements[id]
-
-    with open('{}.json'.format(page), 'w') as fp:
-        js.dump(metadict, fp, indent=4)
-
-    os.chdir(curpath)
-
-    print(" => finished.".format(page))
-
-def get_post_data(posts, page, s): #Get post data and save it as JSON
-
-    curpath = os.getcwd()
-
-    os.chdir(curpath+ r"\{}".format(page))
-
+def get_post_data(posts, acc): #Get post data and save it as JSON
     togo = []
 
     print("* Start scraping posts.")
     pbar = tqdm(posts)
 
     for post in pbar:
-        pbar.set_description("  => Scraping post {}".format(post.split("/")[-2]))
-
+        pbar.set_description("  => Scraping post {}".format(os.path.basename(post)[:-5]))
         postdict = {}
 
-        r = s.get('{}?__a=1'.format( post ))
+        with open(post) as myfile:
 
-        if 'json' in r.headers.get('Content-Type'):
-
-            data = r.json()
+            data = js.load(myfile)
 
             postdict["upperdata"] = get_upper_data(data)
             postdict["tags"] = get_tag_data(data)
@@ -101,12 +78,10 @@ def get_post_data(posts, page, s): #Get post data and save it as JSON
 
                     togo.append(postdict["tags"][tag]["username"])
 
-            get_images_videos(data)
+            get_images_videos(data, acc)
 
-            with open('{}.json'.format(get_upper_data(data)["shortcode"]), 'w') as fp:
+            with open('{}/{}/{}.json'.format(DATA_PATH_,acc,get_upper_data(data)["shortcode"]), 'w') as fp:
                 js.dump(postdict, fp, indent=4)
-
-    os.chdir(curpath)
 
     return togo
 
@@ -182,50 +157,53 @@ def get_comment_data(url): # Pulls comments and information about commenters
 
 def get_raw_data(posts, page, site, s): # Pulls complete data related with post and saves it as JSON
 
+    post_names = [os.path.basename(post) for post in glob.glob("{}/{}/raw/*.json".format(DATA_PATH_, page))]
+
     curpath = os.getcwd()
 
+    Is.create_folder(page)
     inpath = curpath+r"\{}".format(page)
 
     os.chdir(inpath)
-
     Is.create_folder("raw")
-
+    Is.create_folder("images")
+    Is.create_folder("videos")
     os.chdir(inpath + r"\raw")
 
     URL = site + r"/" + page + r"/?__a=1"
 
-    r = s.get(URL)
+    print("* Start scraping {}.".format(page))
 
-    data_json = r.json()
-
-    with open('{}.json'.format(page), 'w') as fp:
-        js.dump(data_json, fp, indent=4)
-
-    for post in posts:
-
-        r = s.get('{}?__a=1'.format( post ))
-
+    if page+".json" not in post_names:
+        r = s.get(URL)
         data_json = r.json()
 
-        with open('{}.json'.format(get_upper_data(data_json)["shortcode"]), 'w') as fp:
+        with open('{}.json'.format(page), 'w') as fp:
             js.dump(data_json, fp, indent=4)
+            print("  => Account page scraping is finished!")
 
-    os.chdir(curpath)
+    pbar = tqdm(posts)
+    for post in pbar:
+        shortcode = post.split("/")[-2]
+        if shortcode+".json" not in post_names:
+            r = s.get('{}?__a=1'.format( post ))
+            data_json = r.json()
 
-def get_images_videos(url): # Saves images and videos
+            with open('{}.json'.format(get_upper_data(data_json)["shortcode"]), 'w') as fp:
+                pbar.set_description("  => Scraping post {}".format(post.split("/")[-2]))
+                js.dump(data_json, fp, indent=4)
+
+def get_images_videos(url, acc, download_video = False): # Saves images and videos
 
     path = os.getcwd()
 
     is_video = url["graphql"]["shortcode_media"]["is_video"]
-
     shortcode = url["graphql"]["shortcode_media"]["shortcode"]
 
-    if is_video:
+    if is_video and download_video:
 
         os.chdir(r"{}\videos".format(path))
-
         curpath = os.getcwd()
-
         download_url = url["graphql"]["shortcode_media"]['video_url']
 
         try:
@@ -236,14 +214,8 @@ def get_images_videos(url): # Saves images and videos
             pass
     else:
 
-        os.chdir(r"{}\images".format(path))
-
-        curpath = os.getcwd()
-
         download_url = url["graphql"]["shortcode_media"]['display_url']
-        urllib.request.urlretrieve(download_url, '{}/{}.jpg'.format(curpath, shortcode))
-
-    os.chdir(path)
+        urllib.request.urlretrieve(download_url, '{}/{}/images/{}.jpg'.format(DATA_PATH_,acc,shortcode))
 
 def text_to_list(file):
 
