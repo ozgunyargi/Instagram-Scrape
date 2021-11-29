@@ -159,16 +159,11 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
 
     post_names = [os.path.basename(post) for post in glob.glob("{}/{}/raw/*.json".format(DATA_PATH_, page))]
 
-    curpath = os.getcwd()
-
-    Is.create_folder(page)
-    inpath = curpath+r"\{}".format(page)
-
-    os.chdir(inpath)
-    Is.create_folder("raw")
-    Is.create_folder("images")
-    Is.create_folder("videos")
-    os.chdir(inpath + r"\raw")
+    if not os.path.exists("{}/{}".format(DATA_PATH_,page)):
+        os.mkdir("{}/{}".format(DATA_PATH_,page))
+        os.mkdir("{}/{}/raw".format(DATA_PATH_,page))
+        os.mkdir("{}/{}/images".format(DATA_PATH_,page))
+        os.mkdir("{}/{}/videos".format(DATA_PATH_,page))
 
     URL = site + r"/" + page + r"/?__a=1"
 
@@ -178,7 +173,7 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
         r = s.get(URL)
         data_json = r.json()
 
-        with open('{}.json'.format(page), 'w') as fp:
+        with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,page), 'w') as fp:
             js.dump(data_json, fp, indent=4)
             print("  => Account page scraping is finished!")
 
@@ -189,7 +184,7 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
             r = s.get('{}?__a=1'.format( post ))
             data_json = r.json()
 
-            with open('{}.json'.format(get_upper_data(data_json)["shortcode"]), 'w') as fp:
+            with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,shortcode), 'w') as fp:
                 pbar.set_description("  => Scraping post {}".format(post.split("/")[-2]))
                 js.dump(data_json, fp, indent=4)
 

@@ -22,9 +22,7 @@ def scrape_an_account(driver_, acc_name, session_):
     Scrp.go_page(driver_, acc_name)
     posts = AM.scroll_and_save(driver_, 1)
 
-    os.chdir(DATA_PATH_)
     Scrp.get_raw_data(posts, acc_name, SITE_, session_)
-    os.chdir(curpath_)
 
 def extract_features(acc_name):
     posts = []
