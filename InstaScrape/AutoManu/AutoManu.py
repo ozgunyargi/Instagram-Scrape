@@ -3,7 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver import Firefox
 
@@ -20,7 +20,9 @@ def open_site(path, site, browser_="Firefox"): # Opens site
 
     if browser_ == "Firefox":
 
-        driver = Firefox(executable_path= DRIVER_PATH_FIREFOX)
+        options = Options()
+        options.add_argument("--headless")
+        driver = Firefox(executable_path= DRIVER_PATH_FIREFOX, firefox_options=options)
 
     elif browser_ == "Chrome":
 
