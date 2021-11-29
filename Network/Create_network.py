@@ -15,7 +15,7 @@ def separate_hashtags(txt):
         for element in txt_list:
             if "#" in element:
                 hashtags.append(element)
-
+# Average class coefficent, networkx metricsleri bak,
     return hashtags
 
 def get_posts(acc_name):
@@ -41,7 +41,7 @@ def create_network(graph_, hashtag_list):
         for i in range(len(hashtag_list)-1):
             for j in range(i+1, len(hashtag_list)):
                 if graph_.has_edge(hashtag_list[i], hashtag_list[j]):
-                    graph_.add_edge(hashtag_list[i], hashtag_list[j], weight=graph_[hashtag_list[i]][hashtag_list[j]]["weight"]+1)
+                    graph_[hashtag_list[i]][hashtag_list[j]]["weight"] +=1
                 else:
                     graph_.add_edge(hashtag_list[i], hashtag_list[j], weight=1.0)
     return graph_
