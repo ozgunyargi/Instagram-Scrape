@@ -176,17 +176,24 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
             r = s.get('{}?__a=1'.format( post ))
             data_json = r.json()
 
-            with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,shortcode), 'w') as fp:
-                pbar.set_description("  => Scraping post {}".format(post.split("/")[-2]))
-                js.dump(data_json, fp, indent=4)
+            if "graphql" in data_json.keys():
+
+                with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,shortcode), 'w') as fp:
+                    pbar.set_description("  => Scraping post {}".format(post.split("/")[-2]))
+                    js.dump(data_json, fp, indent=4)
 
     if page+".json" not in post_names:
         r = s.get(URL)
         data_json = r.json()
 
-        with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,page), 'w') as fp:
-            js.dump(data_json, fp, indent=4)
-            print("  => Account page scraping is finished!")
+        if "graphql" in data_json.keys():
+
+            with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,page), 'w') as fp:
+                js.dump(data_json, fp, indent=4)
+                print("  => Account page scraping is finished!")
+
+        else:
+            print("  => There was a problem accoured on {}!".format(page))
 
 def get_images_videos(url, acc, download_video = False): # Saves images and videos
 

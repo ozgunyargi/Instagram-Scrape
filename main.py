@@ -70,7 +70,7 @@ def main():
 
         for account_name in acc_list:
             if account_name.strip() not in finished_accounts:
-                wait_time = np.random.normal(loc=3, scale=1.5)
+                wait_time = np.absolute(np.random.normal(loc=2, scale=1))
                 scrape_an_account(driver, account_name.strip(), session)
                 finished_accounts.append(account_name.strip())
                 time.sleep(wait_time)
