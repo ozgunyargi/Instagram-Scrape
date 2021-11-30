@@ -38,21 +38,26 @@ def get_page_data(page): #Get the metadata related with the opened page and save
     with open(page) as myfile:
         json = js.load(myfile)
 
-        names = ["id", "posts", "followers", "following", "full_name", "verified"]
-        elements = []
-        elements.append( int(json["logging_page_id"][json["logging_page_id"].index("_")+1:]) )
-        elements.append(json["graphql"]["user"]["edge_owner_to_timeline_media"]["count"])
-        elements.append(json["graphql"]["user"]["edge_followed_by"]["count"])
-        elements.append(json["graphql"]["user"]["edge_follow"]["count"])
-        elements.append(json["graphql"]["user"]["full_name"])
-        elements.append(json["graphql"]["user"]["is_verified"])
+        if "graphql" in json.keys():
 
-        for id, name in enumerate(names):
-            metadict[name] = elements[id]
+            names = ["id", "posts", "followers", "following", "full_name", "verified"]
+            elements = []
+            elements.append( int(json["logging_page_id"][json["logging_page_id"].index("_")+1:]) )
+            elements.append(json["graphql"]["user"]["edge_owner_to_timeline_media"]["count"])
+            elements.append(json["graphql"]["user"]["edge_followed_by"]["count"])
+            elements.append(json["graphql"]["user"]["edge_follow"]["count"])
+            elements.append(json["graphql"]["user"]["full_name"])
+            elements.append(json["graphql"]["user"]["is_verified"])
 
-        with open("{}/{}/{}.json".format(DATA_PATH_, acc_name, acc_name), 'w') as fp:
-            js.dump(metadict, fp, indent=4)
-            print(" => finished.".format(page))
+            for id, name in enumerate(names):
+                metadict[name] = elements[id]
+
+            with open("{}/{}/{}.json".format(DATA_PATH_, acc_name, acc_name), 'w') as fp:
+                js.dump(metadict, fp, indent=4)
+                print(" => finished.")
+
+        else:
+            print(" => {} did not scraped correctly!".format(page))
 
 def get_post_data(posts, acc): #Get post data and save it as JSON
     togo = []
@@ -67,21 +72,23 @@ def get_post_data(posts, acc): #Get post data and save it as JSON
         with open(post) as myfile:
 
             data = js.load(myfile)
+            
+            if "graphql" in data.keys():
 
-            postdict["upperdata"] = get_upper_data(data)
-            postdict["tags"] = get_tag_data(data)
-            postdict["comments"] = get_comment_data(data)
-
-            for tag in postdict["tags"]:
-
-                if postdict["tags"][tag]["username"] not in togo:
-
-                    togo.append(postdict["tags"][tag]["username"])
-
-            get_images_videos(data, acc)
-
-            with open('{}/{}/{}.json'.format(DATA_PATH_,acc,get_upper_data(data)["shortcode"]), 'w') as fp:
-                js.dump(postdict, fp, indent=4)
+              postdict["upperdata"] = get_upper_data(data)
+              postdict["tags"] = get_tag_data(data)
+              postdict["comments"] = get_comment_data(data)
+  
+              for tag in postdict["tags"]:
+  
+                  if postdict["tags"][tag]["username"] not in togo:
+  
+                      togo.append(postdict["tags"][tag]["username"])
+  
+              get_images_videos(data, acc)
+  
+              with open('{}/{}/{}.json'.format(DATA_PATH_,acc,get_upper_data(data)["shortcode"]), 'w') as fp:
+                  js.dump(postdict, fp, indent=4)
 
     return togo
 
