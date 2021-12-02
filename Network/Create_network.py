@@ -3,6 +3,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 sys.path.append(os.getcwd())
 from InstaScrape.Config.config import *
+from tqdm import tqdm
 
 def separate_hashtags(txt):
     hashtags = []
@@ -54,8 +55,10 @@ def save_as_gexf(graph, account_name, network_type, is_true = True):
 def network(G, acc_name, network_type):
 
     posts = get_posts(acc_name)
+    pbar = tqdm(posts)
 
-    for post in posts:
+    for post in pbar:
+        pbar.set_description("  =>{} network creation of post {}".format(network_type, post[:-5]))
         network_elements = []
         if network_type == "hashtag":
             caption = posts[post]["upperdata"]["text"]

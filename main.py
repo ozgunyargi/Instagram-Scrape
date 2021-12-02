@@ -2,8 +2,11 @@ import sys, time, os, glob
 from optparse import OptionParser
 import InstaScrape.Scrape as Scrp
 import InstaScrape.AutoManu.AutoManu as AM
+import Network.Create_network as ntwrk
 from InstaScrape.Config.config import *
+import networkx as nx
 import numpy as np
+
 
 def open_enviroment(browser_name):
     print("Opening browser")
@@ -46,6 +49,8 @@ def main():
             type="str", dest="text_path", default="")
     parser.add_option("-b", "--browser", help='Browser that you want to select.',
             type="str", dest="browser_name", default="Firefox")
+    parser.add_option("-n", "--network", help='Network type that you want to create.',
+            type="str", dest="network", default="all")
 
     parameters, args = parser.parse_args(sys.argv[1:])
 
@@ -92,6 +97,41 @@ def main():
 
         for account_name in acc_list:
             extract_features(account_name.strip())
+
+    elif parameters.mode == "Network":
+        """
+        Creates the network(s) of account(s) and saves them as gexf file.
+            * Required parameters are "-m = Network, -a = ACCOUNT_NAME_1,[ACCOUNT_NAME_2] | -l = TEXT_PATH, -n = all | tag | hashtag | comment
+        """
+
+        finished_files = [os.path.basename(file)[:-5] for file in glob.glob("{}/*/raw/*.json".format(DATA_PATH_))]
+        finished_accounts = [os.path.basename(acc) for acc in glob.glob("{}/*".format(DATA_PATH_)) if os.path.basename(acc) in finished_files]
+
+        if parameters.text_path == "":
+            acc_list = (parameters.account_name).split(",")
+
+        else:
+            with open(parameters.text_path) as myfile:
+                acc_list = myfile.readlines()
+
+        start_ = time.perf_counter()
+
+        for account_name in acc_list:
+            print("* Starting network creation of {}.".format(account_name))
+            if parameters.network == "all":
+                mynetworks = ["hashtag", "tag", "comment"]
+                for network_type_ in mynetworks:
+                    G_ = nx.Graph()
+                    G_ = ntwrk.network(G_, account_name, network_type_)
+                    ntwrk.save_as_gexf(G_, account_name, network_type_)
+
+            else:
+                G_ = nx.Graph()
+                G_ = ntwrk.network(G_, account_name, parameters.network)
+                ntwrk.save_as_gexf(G_, account_name, parameters.network)
+
+        stop_= time.perf_counter()
+        print("Network creation was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
 
 if __name__ == '__main__':
 
