@@ -15,7 +15,7 @@ def separate_hashtags(txt):
         for element in txt_list:
             if "#" in element:
                 hashtags.append(element)
-# Average class coefficent, networkx metricsleri bak,
+# Average class coefficent, networkx metricsleri bak, indegree centrality, random walk centrality
     return hashtags
 
 def get_posts(acc_name):
@@ -46,24 +46,39 @@ def create_network(graph_, hashtag_list):
                     graph_.add_edge(hashtag_list[i], hashtag_list[j], weight=1.0)
     return graph_
 
-def save_as_gexf(graph, account_name, is_true = True):
+def save_as_gexf(graph, account_name, network_type, is_true = True):
 
     if is_true:
-        nx.write_gexf(graph, "{}/{}/{}_network.gexf".format(DATA_PATH_, account_name, account_name))
+        nx.write_gexf(graph, "{}/{}/{}_{}_network.gexf".format(DATA_PATH_, account_name, account_name, network_type))
 
-def main():
-    G = nx.Graph()
-    acc_name = "krystal.jordan_"
+def network(G, acc_name, network_type):
+
     posts = get_posts(acc_name)
 
     for post in posts:
-        caption = posts[post]["upperdata"]["text"]
-        post_hashtags = separate_hashtags(caption)
+        network_elements = []
+        if network_type == "hashtag":
+            caption = posts[post]["upperdata"]["text"]
+            network_elements = separate_hashtags(caption)
+        elif network_type == "tag":
+            for tagged in posts[post]["tags"]:
+                network_elements.append(posts[post]["tags"][tagged]["username"])
+        elif network_type == "comment":
+                for commented in posts[post]["comments"]:
+                    network_elements.append(posts[post]["comments"][commented]["user_info"]["username"])
 
-        if len(post_hashtags) > 0:
-            G = create_network(G, post_hashtags)
+        if len(network_elements) > 0:
+            G = create_network(G, network_elements)
 
-    save_as_gexf(G, acc_name)
+    return G
+
+def main():
+    G_ = nx.Graph()
+    acc_name_ = "krystal.jordan_"
+    network_type_ = "comment"
+
+    G_ = network(G_, acc_name_, network_type_)
+    save_as_gexf(G_, acc_name_, network_type_)
 
 if __name__ == '__main__':
 
