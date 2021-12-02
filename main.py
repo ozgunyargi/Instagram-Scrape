@@ -3,6 +3,7 @@ from optparse import OptionParser
 import InstaScrape.Scrape as Scrp
 import InstaScrape.AutoManu.AutoManu as AM
 import Network.Create_network as ntwrk
+import Feature_Extraction.Feature_Extraction as fe
 from InstaScrape.Config.config import *
 import networkx as nx
 import numpy as np
@@ -132,6 +133,22 @@ def main():
 
         stop_= time.perf_counter()
         print("Network creation was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
+
+    elif parameters.mode == "Feature_Extraction":
+
+        if parameters.text_path == "":
+            acc_list = (parameters.account_name).split(",")
+
+        else:
+            with open(parameters.text_path) as myfile:
+                acc_list = myfile.readlines()
+
+        start_ = time.perf_counter()
+
+        m_image, m_text = fe.get_the_models()
+
+        for account_name in acc_list:
+            fe.savefeas(m_image, m_text, account_name)
 
 if __name__ == '__main__':
 
