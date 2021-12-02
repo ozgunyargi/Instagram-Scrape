@@ -72,13 +72,21 @@ def network(G, acc_name, network_type):
 
     return G
 
+def extract_network_features(G):
+    feature_dict = {"number_of_nodes": G.number_of_nodes(),
+                    "number_of_edges": G.number_of_edges(),
+                    "total_weight": G.size(weight="weight")}
+
+    return feature_dict
+
 def main():
     G_ = nx.Graph()
     acc_name_ = "krystal.jordan_"
     network_type_ = "comment"
 
     G_ = network(G_, acc_name_, network_type_)
-    save_as_gexf(G_, acc_name_, network_type_)
+    print(extract_network_features(G_))
+#    save_as_gexf(G_, acc_name_, network_type_)
 
 if __name__ == '__main__':
 
