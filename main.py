@@ -144,11 +144,13 @@ def main():
                 acc_list = myfile.readlines()
 
         start_ = time.perf_counter()
-
         m_image, m_text = fe.get_the_models()
 
         for account_name in acc_list:
             fe.savefeas(m_image, m_text, account_name)
+
+        stop_= time.perf_counter()
+        print("Feature extraction was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
 
 if __name__ == '__main__':
 

@@ -95,7 +95,7 @@ def savefeas(image_model, text_model, acc_name):
     print("* Start Extracting Features of {}".format(acc_name))
     account_path = "{}/{}".format(DATA_PATH_, acc_name)
     account_dict = {}
-    pbar = tqdm(glob.glob("{}/{}/images/*".format(DATA_PATH_, acc_name))
+    pbar = tqdm(glob.glob("{}/{}/images/*".format(DATA_PATH_, acc_name)))
     for post_path in pbar:
         post_name = os.path.basename(post_path)[:-4]
         try:
