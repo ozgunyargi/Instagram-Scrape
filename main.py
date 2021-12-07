@@ -8,7 +8,6 @@ from InstaScrape.Config.config import *
 import networkx as nx
 import numpy as np
 
-
 def open_enviroment(browser_name):
     print("Opening browser")
     if browser_name == "Chrome":
@@ -82,6 +81,7 @@ def main():
                 time.sleep(wait_time)
         stop_= time.perf_counter()
         print("Scraping was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
+        browser.close()
 
     elif parameters.mode == "Feature_Filter":
         """
@@ -144,13 +144,11 @@ def main():
                 acc_list = myfile.readlines()
 
         start_ = time.perf_counter()
+
         m_image, m_text = fe.get_the_models()
 
         for account_name in acc_list:
             fe.savefeas(m_image, m_text, account_name)
-
-        stop_= time.perf_counter()
-        print("Feature extraction was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
 
 if __name__ == '__main__':
 
