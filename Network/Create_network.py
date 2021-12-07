@@ -1,9 +1,11 @@
 import json, glob, os, tqdm, sys
+import numpy as np
 import networkx as nx
+from networkx.algorithms.approximation import clique
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 sys.path.append(os.getcwd())
 from InstaScrape.Config.config import *
-from tqdm import tqdm
 
 def separate_hashtags(txt):
     hashtags = []
@@ -75,17 +77,46 @@ def network(G, acc_name, network_type):
 
     return G
 
+def find_radius(G):
+    try:
+        return nx.radius(G)
+    except:
+        return np.nan
+#    max(nx.connected_components(G), key=len) => another solution?
+
+def find_max_core_number(G):
+    mydict = nx.algorithms.core.core_number(G)
+    max_core_number = max(nx.algorithms.core.core_number(G).values())
+
+    counter = 0
+    for node in mydict:
+        if mydict[node] == max_core_number:
+            counter += 1
+    return counter
+
 def extract_network_features(G):
     feature_dict = {"number_of_nodes": G.number_of_nodes(),
                     "number_of_edges": G.number_of_edges(),
-                    "total_weight": G.size(weight="weight")}
+                    "total_weight": G.size(weight="weight"),
+                    "density": nx.classes.function.density(G),
+                    "average_clustering_coefficient": nx.algorithms.cluster.average_clustering(G),
+                    "radius":find_radius(G), # Hocaya danış
+                    "maximum_clique_size": len(clique.max_clique(G)),
+                    "number_of_connected_components": nx.number_connected_components(G),
+                    "fraction_of_the_largets_connected_component": len(clique.max_clique(G))/G.number_of_nodes(),
+                    "maximum_core_number": max(nx.algorithms.core.core_number(G).values()),
+                    "number_of_nodes_that_has_maximum_core_number": find_max_core_number(G)
+                    }
 
+ # Density hesaplama, average clustering coefficient, radius of the network, maximum clique size, (error alırsan directed ı undirected a çevir), connected component sayısı, fraction of the largest connnected component (only ondirected network),
+ # Maximum core number hesapla
+ # Capture, recapture araştır
     return feature_dict
 
 def main():
     G_ = nx.Graph()
     acc_name_ = "krystal.jordan_"
-    network_type_ = "comment"
+    network_type_ = "hashtag"
 
     G_ = network(G_, acc_name_, network_type_)
     print(extract_network_features(G_))
