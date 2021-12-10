@@ -64,7 +64,6 @@ def get_post_data(posts, acc): #Get post data and save it as JSON
 
     print("* Start scraping posts.")
     pbar = tqdm(posts)
-
     for post in pbar:
         pbar.set_description("  => Scraping post {}".format(os.path.basename(post)[:-5]))
         postdict = {}
@@ -72,21 +71,21 @@ def get_post_data(posts, acc): #Get post data and save it as JSON
         with open(post) as myfile:
 
             data = js.load(myfile)
-            
+
             if "graphql" in data.keys():
 
               postdict["upperdata"] = get_upper_data(data)
               postdict["tags"] = get_tag_data(data)
               postdict["comments"] = get_comment_data(data)
-  
+
               for tag in postdict["tags"]:
-  
+
                   if postdict["tags"][tag]["username"] not in togo:
-  
+
                       togo.append(postdict["tags"][tag]["username"])
-  
+
               get_images_videos(data, acc)
-  
+
               with open('{}/{}/{}.json'.format(DATA_PATH_,acc,get_upper_data(data)["shortcode"]), 'w') as fp:
                   js.dump(postdict, fp, indent=4)
 

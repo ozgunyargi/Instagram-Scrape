@@ -38,6 +38,8 @@ def extract_features(acc_name):
 
     Scrp.get_post_data(posts, acc_name)
 
+def findmissings():
+
 def main():
 
     parser = OptionParser()
@@ -81,7 +83,7 @@ def main():
                 time.sleep(wait_time)
         stop_= time.perf_counter()
         print("Scraping was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
-        browser.close()
+        driver.close()
 
     elif parameters.mode == "Feature_Filter":
         """
@@ -144,7 +146,6 @@ def main():
                 acc_list = myfile.readlines()
 
         start_ = time.perf_counter()
-
         m_image, m_text = fe.get_the_models()
 
         for account_name in acc_list:
