@@ -8,3 +8,4 @@ nohup.out
 InstaScrape/Firefox/geckodriver
 Feature_Extraction/__pycache__
 .idea
+Broken_accs.txt
