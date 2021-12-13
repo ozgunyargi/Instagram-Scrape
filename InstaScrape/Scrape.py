@@ -84,7 +84,10 @@ def get_post_data(posts, acc): #Get post data and save it as JSON
 
                       togo.append(postdict["tags"][tag]["username"])
 
-              get_images_videos(data, acc)
+#              try:
+#                  get_images_videos(data, acc)
+#              except:
+#                  continue
 
               with open('{}/{}/{}.json'.format(DATA_PATH_,acc,get_upper_data(data)["shortcode"]), 'w') as fp:
                   js.dump(postdict, fp, indent=4)
@@ -173,7 +176,7 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
 
     URL = site + r"/" + page + r"/?__a=1"
 
-    print("* Start scraping {}.".format(page))
+    print("* Start scraping {}".format(page))
 
     pbar = tqdm(posts)
     for post in pbar:
@@ -182,11 +185,17 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
             r = s.get('{}?__a=1'.format( post ))
             data_json = r.json()
 
-            if "graphql" in data_json.keys():
+            if "status" in data_json.keys():
+                print("Time restriciton is occuerd!. Abording")
+                return True
+
+            elif "graphql" in data_json.keys():
 
                 with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,shortcode), 'w') as fp:
                     pbar.set_description("  => Scraping post {}".format(post.split("/")[-2]))
                     js.dump(data_json, fp, indent=4)
+
+                get_images_videos(data_json, page)
 
     if page+".json" not in post_names:
         r = s.get(URL)
@@ -200,6 +209,8 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
 
         else:
             print("  => There was a problem accoured on {}!".format(page))
+
+    return False
 
 def get_images_videos(url, acc, download_video = False): # Saves images and videos
 

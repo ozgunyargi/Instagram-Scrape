@@ -1,4 +1,4 @@
-import sys, time, os, glob
+import sys, time, os, glob, shutil
 from optparse import OptionParser
 import InstaScrape.Scrape as Scrp
 import InstaScrape.AutoManu.AutoManu as AM
@@ -25,7 +25,9 @@ def scrape_an_account(driver_, acc_name, session_):
 
     Scrp.go_page(driver_, acc_name)
     posts = AM.scroll_and_save(driver_, 1)
-    Scrp.get_raw_data(posts, acc_name, SITE_, session_)
+    is_fail = Scrp.get_raw_data(posts, acc_name, SITE_, session_)
+
+    return is_fail
 
 def extract_features(acc_name):
     posts = []
@@ -38,7 +40,21 @@ def extract_features(acc_name):
 
     Scrp.get_post_data(posts, acc_name)
 
-def findmissings():
+def deleteaccs(filename):
+
+    with open("{}/{}".format(PATH_, filename)) as myfile:
+        accs = myfile.readlines()[:-1]
+        for acc in accs:
+            shutil.rmtree("{}/{}".format(DATA_PATH_, acc.strip()))
+
+def checkfolders():
+    broken_accs = []
+    for folder_path in glob.glob("{}/*".format(DATA_PATH_)):
+        acc_name_ = os.path.basename(folder_path)
+        posts_paths =  glob.glob("{}/{}/raw/*.json".format(DATA_PATH_, acc_name_))
+        if len(posts_paths) <=1:
+            broken_accs.append(acc_name_)
+    return broken_accs
 
 def main():
 
@@ -78,9 +94,12 @@ def main():
         for account_name in acc_list:
             if account_name.strip() not in finished_accounts:
                 wait_time = np.absolute(np.random.normal(loc=2, scale=1))
-                scrape_an_account(driver, account_name.strip(), session)
-                finished_accounts.append(account_name.strip())
-                time.sleep(wait_time)
+                is_fail_ = scrape_an_account(driver, account_name.strip(), session)
+                if is_fail_:
+                    break
+                else:
+                    finished_accounts.append(account_name.strip())
+                    time.sleep(wait_time)
         stop_= time.perf_counter()
         print("Scraping was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
         driver.close()
@@ -121,17 +140,19 @@ def main():
 
         for account_name in acc_list:
             print("* Starting network creation of {}.".format(account_name))
+
             if parameters.network == "all":
                 mynetworks = ["hashtag", "tag", "comment"]
                 for network_type_ in mynetworks:
                     G_ = nx.Graph()
-                    G_ = ntwrk.network(G_, account_name, network_type_)
-                    ntwrk.save_as_gexf(G_, account_name, network_type_)
+                    G_ = ntwrk.network(G_, account_name.strip(), network_type_)
+                    ntwrk.save_as_gexf(G_, account_name.strip(), network_type_)
 
             else:
                 G_ = nx.Graph()
-                G_ = ntwrk.network(G_, account_name, parameters.network)
-                ntwrk.save_as_gexf(G_, account_name, parameters.network)
+                G_ = ntwrk.network(G_, account_name.strip(), parameters.network)
+                ntwrk.save_as_gexf(G_, account_name.strip(), parameters.network)
+
 
         stop_= time.perf_counter()
         print("Network creation was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
@@ -150,6 +171,17 @@ def main():
 
         for account_name in acc_list:
             fe.savefeas(m_image, m_text, account_name)
+
+    elif parameters.mode == "Check":
+
+        broken_list = checkfolders()
+        with open("{}/Broken_accs.txt".format(PATH_), mode="w") as myfile:
+            for acc in broken_list:
+                myfile.write("{}\n".format(acc))
+
+    elif parameters.mode == "Broken":
+
+        deleteaccs(parameters.text_path)
 
 if __name__ == '__main__':
 
