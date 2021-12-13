@@ -60,20 +60,21 @@ def network(G, acc_name, network_type):
     pbar = tqdm(posts)
 
     for post in pbar:
-        pbar.set_description("  =>{} network creation of post {}".format(network_type, post[:-5]))
-        network_elements = []
-        if network_type == "hashtag":
-            caption = posts[post]["upperdata"]["text"]
-            network_elements = separate_hashtags(caption)
-        elif network_type == "tag":
-            for tagged in posts[post]["tags"]:
-                network_elements.append(posts[post]["tags"][tagged]["username"])
-        elif network_type == "comment":
-                for commented in posts[post]["comments"]:
-                    network_elements.append(posts[post]["comments"][commented]["user_info"]["username"])
+        if post[:-5] != "features" and post[:-5] != acc_name:
+            pbar.set_description("  =>{} network creation of post {}".format(network_type, post[:-5]))
+            network_elements = []
+            if network_type == "hashtag":
+                caption = posts[post]["upperdata"]["text"]
+                network_elements = separate_hashtags(caption)
+            elif network_type == "tag":
+                for tagged in posts[post]["tags"]:
+                    network_elements.append(posts[post]["tags"][tagged]["username"])
+            elif network_type == "comment":
+                    for commented in posts[post]["comments"]:
+                        network_elements.append(posts[post]["comments"][commented]["user_info"]["username"])
 
-        if len(network_elements) > 0:
-            G = create_network(G, network_elements)
+            if len(network_elements) > 0:
+                G = create_network(G, network_elements)
 
     return G
 
