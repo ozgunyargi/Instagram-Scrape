@@ -78,6 +78,37 @@ def network(G, acc_name, network_type):
 
     return G
 
+def capture_recapture(acc_name):
+    posts = get_posts(acc_name)
+    pbar = tqdm(posts)
+    capture_recapture_dict = {}
+
+    for post in pbar:
+        if post[:-5] != "features" and post[:-5] != acc_name:
+            pbar.set_description("  =>{} collecting commenters of post {}".format(acc_name, post[:-5]))
+            network_elements = []
+            for commented in posts[post]["comments"]:
+                network_elements.append(posts[post]["comments"][commented]["user_info"]["username"])
+            capture_recapture_dict[post] = network_elements
+    s_posts = list(capture_recapture_dict.keys())
+
+    N_list = []
+
+    for i in range(len(s_posts)-1):
+        M = len(capture_recapture_dict[s_posts[i]]) # Total Marked
+        T = len(capture_recapture_dict[s_posts[i+1]]) # Total capture on 2nd visit
+        R = 0 # number "recaptured"
+        for j in capture_recapture_dict[s_posts[i+1]]:
+            if j in capture_recapture_dict[s_posts[i]]:
+                R += 1
+        if R == 0:
+            M += 1
+            T += 1
+            R += 1
+        N_list.append(M*T/R)
+
+    print(N_list)
+
 def find_radius(G):
     try:
         return nx.radius(G)
@@ -116,11 +147,11 @@ def extract_network_features(G):
 
 def main():
     G_ = nx.Graph()
-    acc_name_ = "krystal.jordan_"
-    network_type_ = "hashtag"
+    acc_name_ = "instagram"
+    network_type_ = "comment"
 
-    G_ = network(G_, acc_name_, network_type_)
-    print(extract_network_features(G_))
+#    G_ = network(G_, acc_name_, network_type_)
+    capture_recapture(acc_name_)
 #    save_as_gexf(G_, acc_name_, network_type_)
 
 if __name__ == '__main__':
