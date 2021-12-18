@@ -66,26 +66,19 @@ def imagefeatures(model, image_p):
 
     return features.flatten()
 
-def textfeatures(model, acc_p, post_n):
-    """
-    Exctracts the text features bu using Sentence-BERT model.
-    This function takes the average of comments that were written
-    in the entered post and returns the feature vector as corresponding mean.
-    """
-    sim_score = 0
-    num_of_coms = 0
-    myfile = open(acc_p+"/"+post_n+".json")
-    opened = json.load(myfile)
-    myfile.close()
-    features = []
-    for user in opened["comments"].keys():
-        user = opened["comments"][user]
-        comment = user["text"].strip()
-        feature = model.encode(comment)
-        features.append(feature)
-        num_of_coms += 1
-    sim_score = getcosinesimilarities(features)
-    return np.array(features).mean(axis=0), sim_score, num_of_coms
+def text_features(model, post_path):
+    post_name = os.path.basename(post_path)
+    file = post_path[:post_path.index("images")]+post_name[:-4]+".json"
+
+    with open(file) as myfile:
+        data = json.load(myfile)
+        caption_embedding = model.encode(data["upperdata"]["text"]).tolist()
+        comments = [model.encode(data["comments"][comment]["text"]).tolist() for comment in data["comments"]]
+
+    text_dict = {"caption": caption_embedding,
+                 "comments": comments}
+
+    return text_dict
 
 def savefeas(image_model, text_model, acc_name):
     """
@@ -101,11 +94,9 @@ def savefeas(image_model, text_model, acc_name):
         try:
             pbar.set_description("  => Extracting features of {}: ".format(post_name))
             im_features = imagefeatures(image_model, post_path)
-            txt_features, score, num_of_comments = textfeatures(text_model, account_path, post_name)
-            account_dict[post_name] = {"image_features": im_features.tolist(),
-                                        "text_features": txt_features.tolist(),
-                                        "cosine_similarity": score,
-                                        "num_of_comments": num_of_comments}
+            temp_dict = text_features(text_model, post_path )
+            account_dict[post_name] = {"image_features":im_features.tolist(),
+                                       "text_features": temp_dict}
         except:
             print("Unkown error, acc name: {}, post: {}".format(acc_name, post_name))
             flag = False
@@ -113,11 +104,13 @@ def savefeas(image_model, text_model, acc_name):
             saveasjson(account_path, account_dict)
         flag = True
 
+    return account_dict
+
 
 def main():
 
     m_image, m_text = get_the_models()
-    savefeas(m_image, m_text)
+    print(savefeas(m_image, m_text, "amu_media"))
 
 if __name__ == '__main__':
     main()
