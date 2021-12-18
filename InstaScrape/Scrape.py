@@ -96,7 +96,7 @@ def get_post_data(posts, acc): #Get post data and save it as JSON
 
 def get_upper_data(url): # Pulls metadata related with the page
 
-    names = ["post_id", "shortcode", "is_video", "image_url", "text"]
+    names = ["post_id", "shortcode", "is_video", "image_url", "text", "comment_number"]
     elements = []
 
     elements.append(int(url["graphql"]["shortcode_media"]["id"]))
@@ -107,6 +107,8 @@ def get_upper_data(url): # Pulls metadata related with the page
         elements.append(url["graphql"]["shortcode_media"]["edge_media_to_caption"]["edges"][0]["node"]["text"])
     except:
         elements.append("")
+
+    elements.append(url["graphql"]["shortcode_media"]["edge_media_to_parent_comment"]["count"])
 
     upperdata = {}
 
