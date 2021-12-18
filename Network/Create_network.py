@@ -84,22 +84,26 @@ def capture_recapture(acc_name):
     capture_recapture_dict = {}
 
     for post in pbar:
+        ghost_dict = {}
         if post[:-5] != "features" and post[:-5] != acc_name:
             pbar.set_description("  =>{} collecting commenters of post {}".format(acc_name, post[:-5]))
             network_elements = []
             for commented in posts[post]["comments"]:
                 network_elements.append(posts[post]["comments"][commented]["user_info"]["username"])
-            capture_recapture_dict[post] = network_elements
+            ghost_dict["commenters"] = network_elements
+            ghost_dict["number_of_comments"] = posts[post]["upperdata"]["comment_number"]
+            ghost_dict["number_of_obsvrd_comments"] = len(posts[post]["comments"])
+            capture_recapture_dict[post] = ghost_dict
     s_posts = list(capture_recapture_dict.keys())
 
     N_list = []
 
     for i in range(len(s_posts)-1):
-        M = len(capture_recapture_dict[s_posts[i]]) # Total Marked
-        T = len(capture_recapture_dict[s_posts[i+1]]) # Total capture on 2nd visit
+        M = len(capture_recapture_dict[s_posts[i]]["commenters"]) # Total Marked
+        T = len(capture_recapture_dict[s_posts[i+1]]["commenters"]) # Total capture on 2nd visit
         R = 0 # number "recaptured"
-        for j in capture_recapture_dict[s_posts[i+1]]:
-            if j in capture_recapture_dict[s_posts[i]]:
+        for j in capture_recapture_dict[s_posts[i+1]]["commenters"]:
+            if j in capture_recapture_dict[s_posts[i]]["commenters"]:
                 R += 1
         if R == 0:
             M += 1
@@ -114,7 +118,7 @@ def find_radius(G):
         return nx.radius(G)
     except:
         return np.nan
-#    max(nx.connected_components(G), key=len) => another solution?
+    max(nx.connected_components(G), key=len)
 
 def find_max_core_number(G):
     mydict = nx.algorithms.core.core_number(G)
@@ -132,10 +136,10 @@ def extract_network_features(G):
                     "total_weight": G.size(weight="weight"),
                     "density": nx.classes.function.density(G),
                     "average_clustering_coefficient": nx.algorithms.cluster.average_clustering(G),
-                    "radius":find_radius(G), # Hocaya danış
+                    "radius":nx.radius(G.subgraph(max(nx.connected_components(G), key=len))),
                     "maximum_clique_size": len(clique.max_clique(G)),
                     "number_of_connected_components": nx.number_connected_components(G),
-                    "fraction_of_the_largets_connected_component": len(clique.max_clique(G))/G.number_of_nodes(),
+                    "fraction_of_the_largets_connected_component": len(max(nx.connected_components(G), key=len))/G.number_of_nodes(),
                     "maximum_core_number": max(nx.algorithms.core.core_number(G).values()),
                     "number_of_nodes_that_has_maximum_core_number": find_max_core_number(G)
                     }
@@ -148,10 +152,11 @@ def extract_network_features(G):
 def main():
     G_ = nx.Graph()
     acc_name_ = "instagram"
-    network_type_ = "comment"
+    network_type_ = "tag"
 
-#    G_ = network(G_, acc_name_, network_type_)
-    capture_recapture(acc_name_)
+    G_ = network(G_, acc_name_, network_type_)
+    print(extract_network_features(G_))
+#    capture_recapture(acc_name_)
 #    save_as_gexf(G_, acc_name_, network_type_)
 
 if __name__ == '__main__':
