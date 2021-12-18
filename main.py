@@ -159,18 +159,26 @@ def main():
 
     elif parameters.mode == "Feature_Extraction":
 
-        if parameters.text_path == "":
+        acc_list = []
+
+        if parameters.text_path == "" and parameters.account_name != "":
             acc_list = (parameters.account_name).split(",")
 
-        else:
+        elif parameters.account_name == "" and parameters.text_path != "":
             with open(parameters.text_path) as myfile:
                 acc_list = myfile.readlines()
+
+        else:
+            acc_list = [os.path.basename(x) for x in glob.glob(f"{DATA_PATH_}/*")]
+
+
 
         start_ = time.perf_counter()
         m_image, m_text = fe.get_the_models()
 
         for account_name in acc_list:
             fe.savefeas(m_image, m_text, account_name)
+     
 
     elif parameters.mode == "Check":
 
