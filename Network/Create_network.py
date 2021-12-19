@@ -130,18 +130,46 @@ def find_max_core_number(G):
             counter += 1
     return counter
 
-def extract_network_features(G):
-    feature_dict = {"number_of_nodes": G.number_of_nodes(),
-                    "number_of_edges": G.number_of_edges(),
-                    "total_weight": G.size(weight="weight"),
-                    "density": nx.classes.function.density(G),
-                    "average_clustering_coefficient": nx.algorithms.cluster.average_clustering(G),
-                    "radius":nx.radius(G.subgraph(max(nx.connected_components(G), key=len))),
-                    "maximum_clique_size": len(clique.max_clique(G)),
-                    "number_of_connected_components": nx.number_connected_components(G),
-                    "fraction_of_the_largets_connected_component": len(max(nx.connected_components(G), key=len))/G.number_of_nodes(),
-                    "maximum_core_number": max(nx.algorithms.core.core_number(G).values()),
-                    "number_of_nodes_that_has_maximum_core_number": find_max_core_number(G)
+def extract_network_features(graph):
+    G = graph.copy()
+    G.to_undirected()
+    G.remove_edges_from(nx.selfloop_edges(G))
+
+    number_of_nodes = G.number_of_nodes()
+    number_of_edges =  G.number_of_edges()
+    if number_of_nodes != 0:
+        total_weight =  G.size(weight="weight")
+        density =  nx.classes.function.density(G)
+        acc = nx.algorithms.cluster.average_clustering(G)
+        radius = nx.radius(G.subgraph(max(nx.connected_components(G), key=len)))
+        mcs = len(clique.max_clique(G))
+        ncc = nx.number_connected_components(G)
+        flcc = len(max(nx.connected_components(G), key=len))/G.number_of_nodes()
+        mcn = max(nx.algorithms.core.core_number(G).values())
+        nnmcn = find_max_core_number(G)
+
+    else:
+        total_weight = 0
+        density = 0
+        acc = 0
+        radius = 0
+        mcs = 0
+        ncc = 0
+        flcc = 0
+        mcn = 0
+        nnmcn = 0
+
+    feature_dict = {"number_of_nodes": number_of_nodes,
+                    "number_of_edges": number_of_edges,
+                    "total_weight": total_weight,
+                    "density": density,
+                    "average_clustering_coefficient": acc,
+                    "radius":radius,
+                    "maximum_clique_size": mcs,
+                    "number_of_connected_components": ncc,
+                    "fraction_of_the_largets_connected_component": flcc,
+                    "maximum_core_number": mcn,
+                    "number_of_nodes_that_has_maximum_core_number":nnmcn
                     }
 
  # Density hesaplama, average clustering coefficient, radius of the network, maximum clique size, (error alırsan directed ı undirected a çevir), connected component sayısı, fraction of the largest connnected component (only ondirected network),
@@ -150,12 +178,17 @@ def extract_network_features(G):
     return feature_dict
 
 def main():
-    G_ = nx.Graph()
-    acc_name_ = "instagram"
-    network_type_ = "tag"
 
-    G_ = network(G_, acc_name_, network_type_)
-    print(extract_network_features(G_))
+    acc_name_ = "amu_media"
+    network_types = ["hashtag","tag","comment"]
+
+    for file_path in glob.glob(f"{DATA_PATH_}/*"):
+        acc_name_ = os.path.basename(file_path)
+        print(acc_name_)
+        for network_type_ in network_types:
+            G_ = nx.Graph()
+            G_ = network(G_, acc_name_, network_type_)
+            extract_network_features(G_)
 #    capture_recapture(acc_name_)
 #    save_as_gexf(G_, acc_name_, network_type_)
 
