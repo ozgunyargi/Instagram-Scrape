@@ -24,11 +24,22 @@ def open_enviroment(browser_name):
 def scrape_an_account(driver_, acc_name, session_):
 
     Scrp.go_page(driver_, acc_name)
-    posts = AM.scroll_and_save(driver_, 1)
-    is_fail = Scrp.get_raw_data(posts, acc_name, SITE_, session_)
 
-    return is_fail
+    if AM.isavailable(driver_):
+        print("* Start scraping {}".format(acc_name))
+        following_ = AM.followers(driver_, acc_name, format_="following")
+        followers_ = AM.followers(driver_, acc_name)
+        if followers_[acc_name]["is_private"] == False:
+            posts = AM.scroll_and_save(driver_, 1)
+            is_fail = Scrp.get_raw_data(posts, acc_name, SITE_, session_, followers_, following_)
+            return is_fail, followers_
+        else:
+            return False, followers_
 
+    else:
+        followers_ = {acc_name : {"is_private": True,
+                                     "followers": []}}
+        return False, followers_
 def extract_features(acc_name):
     posts = []
 
@@ -178,7 +189,7 @@ def main():
 
         for account_name in acc_list:
             fe.savefeas(m_image, m_text, account_name)
-     
+
 
     elif parameters.mode == "Check":
 
@@ -188,8 +199,58 @@ def main():
                 myfile.write("{}\n".format(acc))
 
     elif parameters.mode == "Broken":
-
         deleteaccs(parameters.text_path)
+
+    elif parameters.mode == "Autonomus_Scrape":
+
+        driver, session = open_enviroment(parameters.browser_name)
+        start_ = time.perf_counter()
+
+        if parameters.account_name != "":
+            wait_time = np.absolute(np.random.normal(loc=2, scale=1))
+            is_fail_, followers = scrape_an_account(driver, parameters.account_name, session)
+            if is_fail_ == False:
+                with open(f"{PATH_}/scraped_users.txt", "w") as myfile:
+                    myfile.write(parameters.account_name+"\n")
+                with open(f"{PATH_}/users_to_scrape.txt", "w") as myfile:
+                    for follower in followers[parameters.account_name]["follower"]:
+                        myfile.write(follower+"\n")
+                time.sleep(wait_time)
+
+        while True:
+            myfile = open(f"{PATH_}/users_to_scrape.txt", "r")
+            scraped_files = open(f"{PATH_}/scraped_users.txt", "r")
+            all_followers = []
+            all_scrapeds = []
+
+            scraped_users_list = scraped_files.readlines()
+            scraped_files.close()
+            all_scrapeds = [x.strip() for x in scraped_users_list]
+
+            accounts = myfile.readlines()
+            myfile.close()
+            all_followers = [x.strip() for x in accounts]
+
+            for account in all_followers:
+                if account not in all_scrapeds:
+                    wait_time = np.absolute(np.random.normal(loc=2, scale=1))
+                    is_fail_, followers = scrape_an_account(driver, account, session)
+                    if is_fail_:
+                        break
+                    else:
+                        with open(f"{PATH_}/scraped_users.txt", "a") as scraped_files:
+                            scraped_files.write(account+"\n")
+
+                        with open(f"{PATH_}/users_to_scrape.txt", "a") as myfile:
+                            for follower in followers[account]["follower"]:
+                                myfile.write(follower+"\n")
+                    time.sleep(wait_time)
+            if is_fail_:
+                break
+
+        stop_= time.perf_counter()
+        print("Scraping was succesfull. It finished in {:.2f} seconds".format(stop_-start_))
+        driver.close()
 
 if __name__ == '__main__':
 
