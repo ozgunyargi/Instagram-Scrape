@@ -11,6 +11,7 @@ import time
 import os
 import wget
 import sys
+import json
 
 sys.path.append(os.getcwd())
 from InstaScrape.Config.config import *
@@ -150,23 +151,65 @@ def scroll_and_save(driver, counter): # Returns post URL's while scrolling down 
 
     return posts
 
-def followers(driver, acc_name):
+def isavailable(driver):
 
-    driver.get(f"{SITE_}/{acc_name}")
-    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="react-root"]/section/main/div/header/section/ul/li[2]/a'))).click()
+#    driver.get(f"{SITE_}/{acc_name}")
+    json_data = driver.find_element_by_xpath('/html/body/script[1]')
+    string =json_data.get_attribute("innerHTML")
+    json_file = json.loads(string[string.index("{"):-1])
 
-    try:
-        element = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.XPATH, "/html/body/div[6]/div/div/div[2]/ul/div/li[1]")))
-        usernames = []
-        for i in range(1, 11):
-            element = driver.find_element_by_xpath(f"/html/body/div[6]/div/div/div[2]/ul/div/li[{str(i)}]")
-            element_html = element.get_attribute("innerHTML")
-            usernames.append(element_html[element_html.index("href")+len("href")+1:].split(" ")[0].replace('"', "").replace("/", ""))
-        return usernames
+    if 'HttpErrorPage' in list(json_file["entry_data"].keys()):
+        return False
 
-    finally:
-        driver.quit()
+    else:
+        return True
+
+def followers(driver, acc_name, format_="follower"):
+
+#    driver.get(f"{SITE_}/{acc_name}")
+    usernames = []
+
+    json_data = driver.find_element_by_xpath('/html/body/script[1]')
+    string =json_data.get_attribute("innerHTML")
+    json_file = json.loads(string[string.index("{"):-1])
+    follower_num = json_file["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_followed_by"]["count"]
+    following_num = json_file["entry_data"]["ProfilePage"][0]["graphql"]["user"]["edge_follow"]["count"]
+    is_private = json_file["entry_data"]["ProfilePage"][0]["graphql"]["user"]["is_private"]
+
+    if format_ == "follower":
+        num = follower_num
+
+    else:
+        num = following_num
+
+    if is_private == False:
+        if num > 0:
+            if format_ == "follower":
+                xpath = '//*[@id="react-root"]/section/main/div/header/section/ul/li[2]/a'
+                xpath_ff = 2
+            else:
+                xpath = '//*[@id="react-root"]/section/main/div/header/section/ul/li[3]/a'
+                xpath_ff = 3
+
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath))).click()
+            try:
+                element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, f"/html/body/div[6]/div/div/div[{str(xpath_ff)}]/ul/div/li[1]")))
+                for i in range(1, 11):
+                    try:
+                        element = driver.find_element_by_xpath(f"/html/body/div[6]/div/div/div[{str(xpath_ff)}]/ul/div/li[{str(i)}]")
+                        element_html = element.get_attribute("innerHTML")
+                        usernames.append(element_html[element_html.index("href")+len("href")+1:].split(" ")[0].replace('"', "").replace("/", ""))
+                    except:
+                        continue
+
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'/html/body/div[6]/div/div/div[1]/div/div[2]/button'))).click()
+            except:
+                print("")
+
+    follower_dict = {acc_name : {"is_private": is_private,
+                                 format_: usernames}}
+    return follower_dict
 
 if __name__ == "__main__":
 
@@ -177,11 +220,10 @@ if __name__ == "__main__":
     PASSWORD = PASSWORD_
 
     SEARCH_KEY =PAGE_
-    KEYWORD = "image"
     account_name = "instagram"
 
     driver_ = open_site(DRIVER_PATH, SITE_NAME, browser_="Chrome")
     login(USERNAME,PASSWORD, driver_)
     not_now(driver_)
-    followers(driver_, account_name)
+    print(followers(driver_, account_name, format_="follower"))
     driver_.close()
