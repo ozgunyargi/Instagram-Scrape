@@ -166,7 +166,7 @@ def get_comment_data(url): # Pulls comments and information about commenters
 
     return commentdict
 
-def get_raw_data(posts, page, site, s): # Pulls complete data related with post and saves it as JSON
+def get_raw_data(posts, page, site, s, follower_dict, following_dict): # Pulls complete data related with post and saves it as JSON
 
     post_names = [os.path.basename(post) for post in glob.glob("{}/{}/raw/*.json".format(DATA_PATH_, page))]
 
@@ -177,8 +177,6 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
         os.mkdir("{}/{}/videos".format(DATA_PATH_,page))
 
     URL = site + r"/" + page + r"/?__a=1"
-
-    print("* Start scraping {}".format(page))
 
     pbar = tqdm(posts)
     for post in pbar:
@@ -204,6 +202,12 @@ def get_raw_data(posts, page, site, s): # Pulls complete data related with post 
         data_json = r.json()
 
         if "graphql" in data_json.keys():
+
+            with open('{}/{}/raw/followers.json'.format(DATA_PATH_,page), 'w') as fp:
+                js.dump(follower_dict, fp, indent=4)
+
+            with open('{}/{}/raw/following.json'.format(DATA_PATH_,page), 'w') as fp:
+                js.dump(following_dict, fp, indent=4)
 
             with open('{}/{}/raw/{}.json'.format(DATA_PATH_,page,page), 'w') as fp:
                 js.dump(data_json, fp, indent=4)
