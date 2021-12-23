@@ -10,3 +10,5 @@ Feature_Extraction/__pycache__
 .idea
 Broken_accs.txt
 labels.csv
+scraped_users.txt
+users_to_scrape.txt
