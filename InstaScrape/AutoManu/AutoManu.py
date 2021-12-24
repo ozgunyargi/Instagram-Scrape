@@ -203,7 +203,8 @@ def followers(driver, acc_name, format_="follower"):
                     except:
                         continue
 
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'/html/body/div[6]/div/div/div[1]/div/div[2]/button'))).click()
+                    if format_ == "follower":
+                        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'/html/body/div[6]/div/div/div[1]/div/div[2]/button'))).click()
             except:
                 print("")
 

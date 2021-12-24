@@ -27,19 +27,20 @@ def scrape_an_account(driver_, acc_name, session_):
 
     if AM.isavailable(driver_):
         print("* Start scraping {}".format(acc_name))
-        following_ = AM.followers(driver_, acc_name, format_="following")
+
         followers_ = AM.followers(driver_, acc_name)
+        following_ = AM.followers(driver_, acc_name, format_="following")
         if followers_[acc_name]["is_private"] == False:
             posts = AM.scroll_and_save(driver_, 1)
             is_fail = Scrp.get_raw_data(posts, acc_name, SITE_, session_, followers_, following_)
-            return is_fail, followers_
+            return is_fail, followers_[acc_name]["is_private"], followers_
         else:
-            return False, followers_
+            return False, followers_[acc_name]["is_private"], followers_
 
     else:
         followers_ = {acc_name : {"is_private": True,
                                      "followers": []}}
-        return False, followers_
+        return False, True, followers_
 def extract_features(acc_name):
     posts = []
 
@@ -234,9 +235,14 @@ def main():
             for account in all_followers:
                 if account not in all_scrapeds:
                     wait_time = np.absolute(np.random.normal(loc=2, scale=1))
-                    is_fail_, followers = scrape_an_account(driver, account, session)
+                    is_fail_, is_private, followers = scrape_an_account(driver, account, session)
                     if is_fail_:
                         break
+                    elif is_private:
+                        print(f"{account} is a private account. Skipping...")
+                        with open(f"{PATH_}/scraped_users.txt", "a") as scraped_files:
+                            scraped_files.write(account+"\n")
+                        continue
                     else:
                         with open(f"{PATH_}/scraped_users.txt", "a") as scraped_files:
                             scraped_files.write(account+"\n")
