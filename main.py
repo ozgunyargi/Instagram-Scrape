@@ -33,14 +33,14 @@ def scrape_an_account(driver_, acc_name, session_):
         if followers_[acc_name]["is_private"] == False:
             posts = AM.scroll_and_save(driver_, 1)
             is_fail = Scrp.get_raw_data(posts, acc_name, SITE_, session_, followers_, following_)
-            return is_fail, followers_[acc_name]["is_private"], followers_
+            return is_fail, following_[acc_name]["is_private"], following_
         else:
-            return False, followers_[acc_name]["is_private"], followers_
+            return False, following_[acc_name]["is_private"], following_
 
     else:
-        followers_ = {acc_name : {"is_private": True,
-                                     "followers": []}}
-        return False, True, followers_
+        following_ = {acc_name : {"is_private": True,
+                                     "following": []}}
+        return False, True, following_
 def extract_features(acc_name):
     posts = []
 
@@ -209,19 +209,19 @@ def main():
 
         if parameters.account_name != "":
             wait_time = np.absolute(np.random.normal(loc=2, scale=1))
-            is_fail_, followers = scrape_an_account(driver, parameters.account_name, session)
+            is_fail_, is_private, followings = scrape_an_account(driver, parameters.account_name, session)
             if is_fail_ == False:
                 with open(f"{PATH_}/scraped_users.txt", "w") as myfile:
                     myfile.write(parameters.account_name+"\n")
                 with open(f"{PATH_}/users_to_scrape.txt", "w") as myfile:
-                    for follower in followers[parameters.account_name]["follower"]:
-                        myfile.write(follower+"\n")
+                    for following in followings[parameters.account_name]["following"]:
+                        myfile.write(following+"\n")
                 time.sleep(wait_time)
 
         while True:
             myfile = open(f"{PATH_}/users_to_scrape.txt", "r")
             scraped_files = open(f"{PATH_}/scraped_users.txt", "r")
-            all_followers = []
+            all_followings = []
             all_scrapeds = []
 
             scraped_users_list = scraped_files.readlines()
@@ -230,12 +230,12 @@ def main():
 
             accounts = myfile.readlines()
             myfile.close()
-            all_followers = [x.strip() for x in accounts]
+            all_followins = [x.strip() for x in accounts]
 
-            for account in all_followers:
+            for account in all_followins:
                 if account not in all_scrapeds:
                     wait_time = np.absolute(np.random.normal(loc=2, scale=1))
-                    is_fail_, is_private, followers = scrape_an_account(driver, account, session)
+                    is_fail_, is_private, followings = scrape_an_account(driver, account, session)
                     if is_fail_:
                         break
                     elif is_private:
@@ -248,8 +248,8 @@ def main():
                             scraped_files.write(account+"\n")
 
                         with open(f"{PATH_}/users_to_scrape.txt", "a") as myfile:
-                            for follower in followers[account]["follower"]:
-                                myfile.write(follower+"\n")
+                            for following in followings[account]["following"]:
+                                myfile.write(following+"\n")
                     time.sleep(wait_time)
             if is_fail_:
                 break

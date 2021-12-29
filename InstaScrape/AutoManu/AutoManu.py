@@ -12,6 +12,8 @@ import os
 import wget
 import sys
 import json
+import pandas as pd
+from html.parser import HTMLParser
 
 sys.path.append(os.getcwd())
 from InstaScrape.Config.config import *
@@ -192,21 +194,15 @@ def followers(driver, acc_name, format_="follower"):
                 xpath_ff = 3
 
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, xpath))).click()
-            try:
-                element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, f"/html/body/div[6]/div/div/div[{str(xpath_ff)}]/ul/div/li[1]")))
-                for i in range(1, 11):
-                    try:
-                        element = driver.find_element_by_xpath(f"/html/body/div[6]/div/div/div[{str(xpath_ff)}]/ul/div/li[{str(i)}]")
-                        element_html = element.get_attribute("innerHTML")
-                        usernames.append(element_html[element_html.index("href")+len("href")+1:].split(" ")[0].replace('"', "").replace("/", ""))
-                    except:
-                        continue
 
-                    if format_ == "follower":
-                        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'/html/body/div[6]/div/div/div[1]/div/div[2]/button'))).click()
-            except:
-                print("")
+            element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f"/html/body/div[6]/div/div/div[{str(xpath_ff)}]/ul/div")))
+            inner_element = element.find_elements_by_tag_name("li")
+            for i in inner_element:
+                username = i.find_element_by_tag_name("a").get_attribute("href").split("/")[-2]
+                usernames.append(username)
+
+            if format_ == "follower":
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, f'/html/body/div[6]/div/div/div[1]/div/div[2]/button'))).click()
 
     follower_dict = {acc_name : {"is_private": is_private,
                                  format_: usernames}}
@@ -221,7 +217,7 @@ if __name__ == "__main__":
     PASSWORD = PASSWORD_
 
     SEARCH_KEY =PAGE_
-    account_name = "instagram"
+    account_name = "mitchdubin"
 
     driver_ = open_site(DRIVER_PATH, SITE_NAME, browser_="Chrome")
     login(USERNAME,PASSWORD, driver_)
